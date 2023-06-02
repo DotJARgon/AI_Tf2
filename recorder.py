@@ -71,7 +71,13 @@ print("FPS: " + str(real_fps))
 out = cv2.VideoWriter(filename, fourcc, real_fps, resolution)
 
 print("Recording...")
+# Get all framerates
+fps_arr = []
 while True:
+    # Keep track of start time
+    start_time = time.time()
+
+    # Get Screen
     sct_img = sct.grab(bounding_box)
     frame = numpy.array(sct_img)
     frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
@@ -83,6 +89,12 @@ while True:
     cv2.imshow('Live', frame)
     frames += 1
 
+    # Keep track of end time
+    end_time = time.time()
+    # Calculate fps
+    elapsed_time = end_time - start_time
+    fps_arr.append(round(frames / elapsed_time))
+
     # Stop recording when we press 'q'
     if cv2.waitKey(1) == ord('q'):
         break
@@ -93,6 +105,9 @@ end_time = time.time()
 elapsed_time = end_time - start_time
 print("Time Elapsed: " + str(round(elapsed_time)) + "s")
 out.release()
+
+# Return average fps
+print("Average FPS: " + str(numpy.mean(fps_arr)))
 
 # Destroy all windows
 cv2.destroyAllWindows()

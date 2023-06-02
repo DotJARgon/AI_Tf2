@@ -24,6 +24,14 @@ def filter_image(image):
     image[:,:,1] = numpy.zeros([image.shape[0], image.shape[1]])
     return image
 
+# Applies edge detection filter
+def edge_image(image):
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    image = cv2.GaussianBlur(image, (3,3), 0)
+    image = cv2.Canny(image=image, threshold1=50, threshold2=50)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    return image
+
 # Grab the recording and name the output file
 recording_fn = sys.argv[1]
 output_fn = "Formatted_recordings/" + recording_fn + "_f.mp4"
@@ -47,11 +55,17 @@ output_frame_count = 0
 with alive_bar(frame_count, bar='classic2', spinner=None) as bar:
     if len(sys.argv)>3 and sys.argv[3]:
         bar(int(sys.argv[3]))
+        frame_count -= int(sys.argv[3])
     for f in range(frame_count):
         # Read next frame
         success, frame = recording.read()
 
         if success:
+            # Resize the image
+            w = recording.get(cv2.CAP_PROP_FRAME_WIDTH)  # float `width`
+            h = recording.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float `height`
+            if w > 480 and h > 480:
+                frame = cv2.resize(frame, (480, 480), interpolation=cv2.INTER_CUBIC)
             # List all the images we will check fqor including bounding boxes for performance
             checks = [['A',(300,480,300,480)]]
             found = False
@@ -90,7 +104,7 @@ with alive_bar(frame_count, bar='classic2', spinner=None) as bar:
 print("Saving Video...\n")
 output.release()
 print('Frames In: ' + str(frame_count) + '\tFrames Out: ' + str(output_frame_count))
-print('Duration In: ' + str(frame_count * 60) + '\tDuration Out: ' + str(output_frame_count * 60))
+print('Duration In: ' + str(frame_count / fps) + 's\tDuration Out: ' + str(output_frame_count / fps)+"s")
 print('Compression: %' + str(100-(output_frame_count/frame_count)*100))
 # Destroy all windows
 cv2.destroyAllWindows()
